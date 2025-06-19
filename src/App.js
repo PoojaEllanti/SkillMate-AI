@@ -8,17 +8,20 @@ function App() {
   const [loading, setLoading] = useState(false);
   const [content, setContent] = useState(null);
   const [error, setError] = useState('');
-  const [history, setHistory] = useState([]);
+  const [searchHistory, setSearchHistory] = useState([]);
   const [darkMode, setDarkMode] = useState(false);
   const [userAnswers, setUserAnswers] = useState({});
   const [quizSubmitted, setQuizSubmitted] = useState(false);
   const [score, setScore] = useState(0);
 
+  // API Base URL - Change this to your deployed backend URL
+  const API_BASE_URL = process.env.REACT_APP_API_URL || 'https://skillmate-demo-api.onrender.com';
+
   // Load history and preferences from localStorage
   useEffect(() => {
     const savedHistory = localStorage.getItem('learningHistory');
     if (savedHistory) {
-      setHistory(JSON.parse(savedHistory));
+      setSearchHistory(JSON.parse(savedHistory));
     }
     
     const savedDarkMode = localStorage.getItem('darkMode') === 'true';
@@ -27,9 +30,9 @@ function App() {
 
   // Save history and preferences
   useEffect(() => {
-    localStorage.setItem('learningHistory', JSON.stringify(history));
+    localStorage.setItem('learningHistory', JSON.stringify(searchHistory));
     localStorage.setItem('darkMode', darkMode.toString());
-  }, [history, darkMode]);
+  }, [searchHistory, darkMode]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -46,7 +49,7 @@ function App() {
     setScore(0);
     
     try {
-      const response = await axios.post('http://localhost:5000/generate', {
+      const response = await axios.post(`${API_BASE_URL}/generate`, {
         skill: skill.trim(),
         difficulty
       });
@@ -61,7 +64,7 @@ function App() {
       };
 
       setContent(newContent);
-      setHistory(prev => [newContent, ...prev.slice(0, 4)]); // Keep last 5 searches
+      setSearchHistory(prev => [newContent, ...prev.slice(0, 4)]); // Keep last 5 searches
     } catch (err) {
       const errorMsg = err.response?.data?.error || 
                       err.message || 
@@ -74,7 +77,7 @@ function App() {
   };
 
   const loadFromHistory = (index) => {
-    setContent(history[index]);
+    setContent(searchHistory[index]);
     setUserAnswers({});
     setQuizSubmitted(false);
     setScore(0);
@@ -311,11 +314,11 @@ function App() {
           </div>
         )}
         
-        {history.length > 0 && (
+        {searchHistory.length > 0 && (
           <div className="history-section">
             <h3>Recent Searches</h3>
             <ul className="history-list">
-              {history.map((item, index) => (
+              {searchHistory.map((item, index) => (
                 <li 
                   key={index}
                   onClick={() => loadFromHistory(index)}
